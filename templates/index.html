@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-
+  {% if not authenticated %}
+    {% include 'login.html' %}
+  {% else %}
+    {% include 'workspaces.html' %}
+  {% endif %}
 {% endblock %}

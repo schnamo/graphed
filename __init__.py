@@ -1,4 +1,4 @@
-from flask import request, Flask, render_template, Markup, redirect, jsonify
+from flask import request, Flask, render_template, Markup, redirect, jsonify, redirect
 from .database import engine, User, Token, Workspace, Note, Connection
 from .error import MissingInformation, InvalidInformation
 import sqlalchemy as db
@@ -12,8 +12,7 @@ app = Flask(__name__)
 app.jinja_env.auto_reload = True
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
-
-def login(username, password):
+def check_credentials(username, password):
     hasher = sha256()
     hasher.update(password.encode("utf8"))
     passhash = hasher.digest()
@@ -40,12 +39,12 @@ def authenticate():
     return row.user
 
 # Return a list of all users workspaces
-@app.route("/workspaces")
+@app.route("/api/workspaces")
 def get_workspaces():
     pass
 
 # Create new workspace and return id
-@app.route("/workspace/create/<name>")
+@app.route("/api/workspace/create/<name>")
 def create_workspace(name):
     try:
         owner = authenticate()
@@ -65,17 +64,17 @@ def create_workspace(name):
         return jsonify({"status": "error", "message": e.message})
 
 # Return all nodes in workspace (list of notes)
-@app.route("/workspace/<int:id>")
+@app.route("/api/workspace/<int:id>")
 def get_workspace(id):
     pass
 
 # Create new workspace and return id
-@app.route("/workspace/delete/<int:id>")
+@app.route("/api/workspace/delete/<int:id>")
 def delete_workspace(id):
     pass
 
 # Issue login token
-@app.route("/token", methods=['POST'])
+@app.route("/api/token", methods=['POST'])
 def get_token():
     try:
         username = request.form["username"]
@@ -87,7 +86,7 @@ def get_token():
     except MissingInformation as e:
         return jsonify({ "status": "error", "message": e.message })
     username = username.lower()
-    user = login(username, password)
+    user = check_credentials(username, password)
     if user is None:
         return jsonify({"status": "error", "message": "Invalid login"})
     conn = engine.connect()
@@ -112,8 +111,8 @@ def get_token():
         return jsonify({"status": "ok", "token": token_hex});
 
 # Create user 
-@app.route("/register", methods=['POST'])
-def register():
+@app.route("/api/register", methods=['POST'])
+def create_user():
     conn = engine.connect()
     try:
         username = request.form["username"]
@@ -157,25 +156,40 @@ def register():
     return jsonify({ "status": "ok" })
 
 # Create note in workspace
-@app.route("/workspace/<int:id>/create/")
+@app.route("/api/workspace/<int:id>/create/")
 def create_note(id):
     pass
 
 # Connect two nodes
-@app.route("/workspace/<int:id>/connect/<int:origin>/<int:target>")
+@app.route("/api/workspace/<int:id>/connect/<int:origin>/<int:target>")
 def connect_notes(id, origin, target):
     pass
 
 # Update note
-@app.route("/workspace/<int:id>/update/<int:note>", methods=['GET', 'POST'])
+@app.route("/api/workspace/<int:id>/update/<int:note>", methods=['GET', 'POST'])
 def update_note(id, note):
     pass
 
 # Remove note from workspace
-@app.route("/workspace/<int:id>/remove/<int:note>")
+@app.route("/api/workspace/<int:id>/remove/<int:note>")
 def remove_note(id, note):
     pass
 
+@app.route("/register")
+def register():
+    try:
+        owner = authenticate()
+        return redirect("/workspaces")
+    except MissingInformation as e:
+        return render_template('register.html')
+
 @app.route("/")
 def index():
-    return render_template('index.html')
+    authenticated = False
+    try:
+        owner = authenticate()
+        authenticated = True
+    except MissingInformation as e:
+        pass
+    return render_template('index.html', authenticated=authenticated)
+
