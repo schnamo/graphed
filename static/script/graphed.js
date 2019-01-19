@@ -9,14 +9,19 @@ api.getToken("test", "testhello", function(token) {
       console.log(note1);
       api.createNote(workspace_id, "tada", function(note2) {
         console.log(note2);
-        api.connectNotes(workspace_id, note1.id, note2.id, function(connection) {
-          console.log(connection);
-          api.createNote(workspace_id, "tralala", function(note3){
-            console.log(note3);
-            api.connectNotes(workspace_id,note1.id, note3.id, function(connection2){
-              console.log(connection2);
-              api.getWorkspace(workspace_id, function(workspaceStuff) {
-                console.log(workspaceStuff);
+        api.createNote(workspace_id, "tralala", function(note3){
+          console.log(note3);
+          api.connectNotes(workspace_id, note1.id, note2.id, function(connection) {
+            console.log(connection);
+            api.connectNotes(workspace_id, note2.id, note3.id, function(connection) {
+              console.log(connection);
+                api.getWorkspace(workspace_id, function(workspaceStuff) {
+                  console.log(workspaceStuff);
+                  api.removeNote(workspace_id, note3.id, function() {
+                    api.getWorkspace(workspace_id, function(workspaceStuff2) {
+                      console.log(workspaceStuff2);
+                  });
+                });
               });
             });
           });
