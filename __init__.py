@@ -212,7 +212,27 @@ def create_note(id, name):
 # Connect two nodes
 @app.route("/workspace/<int:id>/connect/<int:origin>/<int:target>")
 def connect_notes(id, origin, target):
-    pass
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+        query = sql.insert(Connections.__table__,
+                values={
+                    Connection.workspace: id,
+                    Connection.origin: origin,
+                    Connection.target: target,
+                    }
+                )
+        result = conn.execute(query)
+        return jsonify({
+                "status": "ok",
+                "note": {
+                    "id": result.lastrowid,
+                    "name": name
+                }
+            })
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 # Update note
 @app.route("/workspace/<int:id>/update/<int:note>", methods=['GET', 'POST'])
