@@ -52,7 +52,7 @@ export var api = {
   },
   getWorkspace : function(id, callback) {
     attemptAPIGetRequest("/api/workspace/" + id,
-                         function(data) { callback(data.notes); });
+                         function(data) { callback(data.notes, data.connections); });
   },
   deleteWorkspace : function(id, callback) {
     attemptAPIGetRequest("/api/workspace/" + id,
