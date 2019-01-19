@@ -72,9 +72,11 @@ def get_workspace(id):
 
     conn = engine.connect()
 
-    notes_query = sql.select([Note.__table__])\ # define query for db request to get all nodes for workspace id
+    # define query for db request to get all nodes for workspace id
+    notes_query = sql.select([Note.__table__])\
         .where(Note.workspace == id)
-    connections_query = sql.select([Note.__table__])\ # define query for db request to get all nodes for workspace id
+    # define query for db request to get all nodes for workspace id
+    connections_query = sql.select([Note.__table__])\
         .where(Note.workspace == id)
 
     notes = conn.execute(notes_query).fetchall()
@@ -99,7 +101,7 @@ def get_workspace(id):
         })
 
 
-# Create new workspace and return id
+# Delete workspace and return id
 @app.route("/workspace/delete/<int:id>")
 def delete_workspace(id):
     pass
@@ -189,21 +191,26 @@ def register():
 # Create note in workspace
 @app.route("/workspace/<int:id>/create/<name>")
 def create_note(id, name):
-    token = request.cookies.get("token") # get token
-    owner = cookie_to_user(token)
+    try:
+        owner = authenticate()
 
-    conn = engine.connect()
-    query = sql.insert(Note.__table__,
-            values={
-                Note.name: name,
-                Workspace.owner: owner
+        conn = engine.connect()
+        query = sql.insert(Note.__table__,
+                values={
+                    Note.name: name,
+                    Note.workspace: id
+                    }
+                )
+        result = conn.execute(query)
+        return jsonify({
+                "status": "ok",
+                "note": {
+                    "id": result.lastrowid,
+                    "name": name
                 }
-            )
-    result = conn.execute(query)
-    return jsonify({
-            "status": "ok",
-            "id": result.lastrowid,
-        })
+            })
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 # Connect two nodes
 @app.route("/workspace/<int:id>/connect/<int:origin>/<int:target>")
