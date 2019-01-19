@@ -238,7 +238,7 @@ def connect_notes(id, origin, target):
         owner = authenticate()
 
         conn = engine.connect()
-        query = sql.insert(Connections.__table__,
+        query = sql.insert(Connection.__table__,
                 values={
                     Connection.workspace: id,
                     Connection.origin: origin,
@@ -248,10 +248,9 @@ def connect_notes(id, origin, target):
         result = conn.execute(query)
         return jsonify({
                 "status": "ok",
-                "note": {
-                    "id": result.lastrowid,
-                    "name": name
-                }
+                "id": result.lastrowid,
+                "origin": origin,
+                "target": target,
             })
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
