@@ -41,7 +41,30 @@ def authenticate():
 # Return a list of all users workspaces
 @app.route("/api/workspaces")
 def get_workspaces():
-    pass
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+
+        # define query for db request to get workspaces
+        workspace_query = sql.select([Workspace.__table__])\
+            .where(Workspace.owner == owner)
+
+        workspaces = conn.execute(workspace_query).fetchall()
+
+        workspace_list = []
+        for workspace in workspaces:
+            workspace_list.append({
+                    "id": workspace.id,
+                    "name": workspace.name
+                })
+
+        return jsonify({
+                "status" : "ok",
+                "workspaces" : workspace_list
+            })
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 # Create new workspace and return id
 @app.route("/api/workspace/create/<name>")
