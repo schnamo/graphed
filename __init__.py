@@ -86,7 +86,7 @@ def create_workspace(name):
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
-# Return all nodes in workspace (list of notes)
+# Return all notes and connections in workspace (list of notes)
 @app.route("/api/workspace/<int:id>")
 def get_workspace(id):
     try:
@@ -98,8 +98,8 @@ def get_workspace(id):
         notes_query = sql.select([Note.__table__])\
             .where(Note.workspace == id)
         # define query for db request to get all nodes for workspace id
-        connections_query = sql.select([Note.__table__])\
-            .where(Note.workspace == id)
+        connections_query = sql.select([Connection.__table__])\
+            .where(Connection.workspace == id)
 
         notes = conn.execute(notes_query).fetchall()
         connections = conn.execute(connections_query).fetchall()
@@ -111,10 +111,16 @@ def get_workspace(id):
                     "name": note.name
                 })
         workspace_connections = []
+        for connection in connections:
+            workspace_connections.append({
+                    "origin" : connection.origin,
+                    "target" : connection.target,
+                })
 
         return jsonify({
                 "status" : "ok",
-                "notes" : workspace_notes
+                "notes" : workspace_notes,
+                "connections" : workspace_connections,
             })
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
@@ -238,7 +244,7 @@ def connect_notes(id, origin, target):
         owner = authenticate()
 
         conn = engine.connect()
-        query = sql.insert(Connections.__table__,
+        query = sql.insert(Connection.__table__,
                 values={
                     Connection.workspace: id,
                     Connection.origin: origin,
@@ -248,10 +254,9 @@ def connect_notes(id, origin, target):
         result = conn.execute(query)
         return jsonify({
                 "status": "ok",
-                "note": {
-                    "id": result.lastrowid,
-                    "name": name
-                }
+                "id": id,
+                "origin": origin,
+                "target": target,
             })
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
