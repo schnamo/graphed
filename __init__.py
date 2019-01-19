@@ -129,7 +129,19 @@ def get_workspace(id):
 # Delete workspace and return id
 @app.route("/api/workspace/delete/<int:id>")
 def delete_workspace(id):
-    pass
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+        query = sql.delete(Note.__table__, Note.workspace == id)
+        result = conn.execute(query)
+        query = sql.delete(Connection.__table__, Connection.workspace == id)
+        result = conn.execute(query)
+        query = sql.delete(Workspace.__table__, Workspace.id == id)
+        result = conn.execute(query)
+        return jsonify({"status" : "ok", "message": "deleted"})
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 # Issue login token
 @app.route("/api/token", methods=['POST'])

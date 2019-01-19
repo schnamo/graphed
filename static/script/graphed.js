@@ -15,11 +15,11 @@ api.getToken("test", "testhello", function(token) {
             console.log(connection);
             api.connectNotes(workspace_id, note2.id, note3.id, function(connection) {
               console.log(connection);
-                api.getWorkspace(workspace_id, function(workspaceStuff) {
-                  console.log(workspaceStuff);
-                  api.removeNote(workspace_id, note3.id, function() {
-                    api.getWorkspace(workspace_id, function(workspaceStuff2) {
-                      console.log(workspaceStuff2);
+                api.createWorkspace("workspace2", function(workspace_id2) {
+                  console.log(workspace_id2);
+                  api.deleteWorkspace(workspace_id, function(bla) {
+                    api.getWorkspaces(function(workspaceList) {
+                      console.log(workspaceList);
                   });
                 });
               });
