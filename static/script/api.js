@@ -58,13 +58,8 @@ export var api = {
     attemptAPIGetRequest("/api/workspace/" + id,
                          function(data) { callback(); });
   },
-<<<<<<< HEAD
   createNote : function(id, name, callback) {
-    attemptAPIGetRequest("/workspace/" + id + "/create/" + name,
-=======
-  createNote : function(id, note, callback) {
-    attemptAPIGetRequest("/api/workspace/" + id + "/create/",
->>>>>>> 0c16148d52ec63401ab97b5d1241d9f8e0b6580c
+    attemptAPIGetRequest("/api/workspace/" + id + "/create/" + name,
                          function(data) { callback(data.note); });
   },
   connectNotes : function(id, origin, target, callback) {
