@@ -1,9 +1,16 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Graphed</title>
+
     <script type="module" src="/static/script/graphed.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
   </head>
   <body>
-    {% block content %}{% endblock %}
+    {% include 'includes/_navbar.html' %}
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
   </body>
 </html>
