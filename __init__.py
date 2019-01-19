@@ -64,41 +64,38 @@ def create_workspace(name):
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
-# Return all nodes in workspace (list of notes)
+# Return all nodes in workspace (list of notes and connections)
 @app.route("/workspace/<int:id>")
 def get_workspace(id):
-    token = request.cookies.get("token") # get token
-    owner = cookie_to_user(token)
+    try:
+        owner = authenticate()
 
-    conn = engine.connect()
+        conn = engine.connect()
 
-    # define query for db request to get all nodes for workspace id
-    notes_query = sql.select([Note.__table__])\
-        .where(Note.workspace == id)
-    # define query for db request to get all nodes for workspace id
-    connections_query = sql.select([Note.__table__])\
-        .where(Note.workspace == id)
+        # define query for db request to get all nodes for workspace id
+        notes_query = sql.select([Note.__table__])\
+            .where(Note.workspace == id)
+        # define query for db request to get all nodes for workspace id
+        connections_query = sql.select([Note.__table__])\
+            .where(Note.workspace == id)
 
-    notes = conn.execute(notes_query).fetchall()
-    connections = conn.execute(connections_query).fetchall()
+        notes = conn.execute(notes_query).fetchall()
+        connections = conn.execute(connections_query).fetchall()
 
-    workspace_notes = []
-    for note in notes: # build nodes for json
-        workspace_notes.append({
-        "node" : note.id,
-        "name" : note.name,
-        })
-    workspace_connections = []
-    for connection in connections:
-        workspace_connections.append({
-        "origin" : connection.origin,
-        "target" : connection.target,
-        })
+        workspace_notes = []
+        for note in notes:
+            workspace_notes.append({
+                    "id": note.id,
+                    "name": note.name
+                })
+        workspace_connections = []
 
-    return jsonify({
-            "notes" : workspace_notes,
-            "connections" : workspace_connections
-        })
+        return jsonify({
+                "status" : "ok",
+                "notes" : workspace_notes
+            })
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 
 # Delete workspace and return id
