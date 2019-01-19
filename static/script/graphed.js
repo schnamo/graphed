@@ -1,5 +1,5 @@
 import {api} from '/static/script/api.js';
 
-api.createWorkspace("test", function(id) {
+api.createWorkspace("oof", function(id) {
   // add the workspace to the UI
 });
