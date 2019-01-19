@@ -1,4 +1,5 @@
 import {api} from '/static/script/api.js';
+<<<<<<< HEAD
 
 // api.registerUser("test", "testhello", function() {});
 
@@ -16,3 +17,5 @@ api.getToken("test", "testhello", function(token) {
     });
   });
 });
+=======
+>>>>>>> 0c16148d52ec63401ab97b5d1241d9f8e0b6580c
