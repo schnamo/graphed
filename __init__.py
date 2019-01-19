@@ -63,18 +63,12 @@ def create_workspace(name):
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
-<<<<<<< HEAD
-# Return all nodes in workspace (list of notes and connections)
-@app.route("/workspace/<int:id>")
-=======
 # Return all nodes in workspace (list of notes)
 @app.route("/api/workspace/<int:id>")
->>>>>>> 0c16148d52ec63401ab97b5d1241d9f8e0b6580c
 def get_workspace(id):
     try:
         owner = authenticate()
 
-<<<<<<< HEAD
         conn = engine.connect()
 
         # define query for db request to get all nodes for workspace id
@@ -104,11 +98,7 @@ def get_workspace(id):
 
 
 # Delete workspace and return id
-@app.route("/workspace/delete/<int:id>")
-=======
-# Create new workspace and return id
 @app.route("/api/workspace/delete/<int:id>")
->>>>>>> 0c16148d52ec63401ab97b5d1241d9f8e0b6580c
 def delete_workspace(id):
     pass
 
@@ -149,15 +139,9 @@ def get_token():
         token_hex = b2a_hex(row.token).decode('ascii')
         return jsonify({"status": "ok", "token": token_hex});
 
-<<<<<<< HEAD
 # Create user
-@app.route("/register", methods=['POST'])
-def register():
-=======
-# Create user 
 @app.route("/api/register", methods=['POST'])
 def create_user():
->>>>>>> 0c16148d52ec63401ab97b5d1241d9f8e0b6580c
     conn = engine.connect()
     try:
         username = request.form["username"]
@@ -201,8 +185,7 @@ def create_user():
     return jsonify({ "status": "ok" })
 
 # Create note in workspace
-<<<<<<< HEAD
-@app.route("/workspace/<int:id>/create/<name>")
+@app.route("/api/workspace/<int:id>/create/<name>")
 def create_note(id, name):
     try:
         owner = authenticate()
@@ -224,11 +207,6 @@ def create_note(id, name):
             })
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
-=======
-@app.route("/api/workspace/<int:id>/create/")
-def create_note(id):
-    pass
->>>>>>> 0c16148d52ec63401ab97b5d1241d9f8e0b6580c
 
 # Connect two nodes
 @app.route("/api/workspace/<int:id>/connect/<int:origin>/<int:target>")
@@ -282,4 +260,3 @@ def index():
     except MissingInformation as e:
         pass
     return render_template('index.html', authenticated=authenticated)
-
