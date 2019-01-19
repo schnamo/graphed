@@ -11,6 +11,15 @@ api.getToken("test", "testhello", function(token) {
         console.log(note);
         api.getWorkspace(workspace_id, function(notes) {
           console.log(notes);
+          api.createWorkspace("workspace2",function(workspace_id2) {
+            console.log(workspace_id2)
+            api.createNote(workspace_id, "blubber", function(note) {
+              console.log(note);
+              api.getWorkspaces(function(workspaces) {
+                console.log(workspaces);
+              });
+            });
+          });
         });
       });
     });
