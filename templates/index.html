@@ -2,7 +2,9 @@
 
 {% block content %}
   {% if not authenticated %}
-    {% include 'login.html' %}
+    <div class="container">
+      {% include 'login.html' %}
+    </div>
   {% else %}
     {% include 'workspaces.html' %}
   {% endif %}

@@ -247,7 +247,7 @@ def remove_note(id, note):
 def register():
     try:
         owner = authenticate()
-        return redirect("/workspaces")
+        return redirect("/")
     except MissingInformation as e:
         return render_template('register.html')
 
