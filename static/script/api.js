@@ -51,11 +51,12 @@ export var api = {
                          function(data) { callback(data.id); });
   },
   getWorkspace : function(id, callback) {
-    attemptAPIGetRequest("/api/workspace/" + id,
-                         function(data) { callback(data.notes); });
+    attemptAPIGetRequest(
+        "/api/workspace/" + id,
+        function(data) { callback(data.notes, data.connections); });
   },
   deleteWorkspace : function(id, callback) {
-    attemptAPIGetRequest("/api/workspace/" + id,
+    attemptAPIGetRequest("/api/workspace/delete/" + id,
                          function(data) { callback(); });
   },
   createNote : function(id, name, callback) {
@@ -63,13 +64,21 @@ export var api = {
                          function(data) { callback(data.note); });
   },
   connectNotes : function(id, origin, target, callback) {
-    attemptAPIGetRequest(
-        "/api/workspace/" + id + "/connect/" + origin + "/" + target,
-        function(data) { callback(data.origin, data.target); });
+    attemptAPIGetRequest("/api/workspace/" + id + "/connect/" + origin + "/" +
+                             target,
+                         function(data) { callback(data.connection); });
   },
-  updateNote : function(id, note, callback) {
-    attemptAPIGetRequest("/api/workspace/" + id + "/update/" + note,
+  removeConnection : function(id, connection, callback) {
+    attemptAPIGetRequest("/api/workspace/" + id + "/disconnect/" + connection,
                          function(data) { callback(); });
+  },
+  getNote : function(id, note, callback) {
+    attemptAPIGetRequest("/api/workspace/" + id + "/note/" + note,
+                         function(data) { callback(data.content); });
+  },
+  updateNote : function(id, note, content, callback) {
+    attemptAPIPostRequest("/api/workspace/" + id + "/update/" + note,
+                          {content : content}, function(data) { callback(); });
   },
   removeNote : function(id, note, callback) {
     attemptAPIGetRequest("/api/workspace/" + id + "/remove/" + note,

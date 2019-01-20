@@ -2,15 +2,15 @@
 <html>
   <head>
     <title>Graphed</title>
-    <script type="module" src="/static/script/graphed.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    {% if authenticated %}
+      <script type="module" src="/static/script/graphed.js"></script>
+    {% endif %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/style/login.css">
+    <link rel="stylesheet" href="/static/style/style.css">
   </head>
   <body>
-    <div class="container">
-        {% block content %}{% endblock %}
-    </div>
+    {% block content %}{% endblock %}
   </body>
 </html>
