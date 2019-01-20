@@ -2,7 +2,7 @@ from flask import request, Flask, render_template, Markup, redirect, jsonify, re
 from .database import engine, User, Token, Workspace, Note, Connection
 from .error import MissingInformation, InvalidInformation
 import sqlalchemy as db
-from sqlalchemy import sql
+from sqlalchemy import sql, update
 from binascii import b2a_hex, a2b_hex
 from hashlib import sha256
 from os import urandom
@@ -129,7 +129,19 @@ def get_workspace(id):
 # Delete workspace and return id
 @app.route("/api/workspace/delete/<int:id>")
 def delete_workspace(id):
-    pass
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+        query = sql.delete(Note.__table__, Note.workspace == id)
+        result = conn.execute(query)
+        query = sql.delete(Connection.__table__, Connection.workspace == id)
+        result = conn.execute(query)
+        query = sql.delete(Workspace.__table__, Workspace.id == id)
+        result = conn.execute(query)
+        return jsonify({"status" : "ok", "message": "deleted"})
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 # Issue login token
 @app.route("/api/token", methods=['POST'])
@@ -244,19 +256,28 @@ def connect_notes(id, origin, target):
         owner = authenticate()
 
         conn = engine.connect()
+        if origin < target:
+            origin_insert = origin
+            target_insert = target
+        elif origin > target:
+            origin_insert = target
+            target_insert = origin
+        else:
+            raise InvalidInformation("Note cannot reference to itself.")
+
         query = sql.insert(Connection.__table__,
                 values={
                     Connection.workspace: id,
-                    Connection.origin: origin,
-                    Connection.target: target,
+                    Connection.origin: origin_insert,
+                    Connection.target: target_insert,
                     }
                 )
         result = conn.execute(query)
         return jsonify({
                 "status": "ok",
                 "id": id,
-                "origin": origin,
-                "target": target,
+                "origin": origin_insert,
+                "target": target_insert,
             })
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
@@ -265,11 +286,40 @@ def connect_notes(id, origin, target):
 @app.route("/api/workspace/<int:id>/update/<int:note>", methods=['GET', 'POST'])
 def update_note(id, note):
     pass
+    # try:
+    #     owner = authenticate()
+    #
+    #     conn = engine.connect()
+    #     query = sql.update([Note.__table__]).\
+    #         values(Note.name = note).\
+    #         where(Note.workspace == id)
+    #     result = conn.execute(query)
+    #     return jsonify({
+    #             "status": "ok",
+    #             "note": {
+    #                 "id": result.id,
+    #                 "name": result.name
+    #             }
+    #         })
+    # except MissingInformation as e:
+    #     return jsonify({"status": "error", "message": e.message})
 
 # Remove note from workspace
 @app.route("/api/workspace/<int:id>/remove/<int:note>")
 def remove_note(id, note):
-    pass
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+        query = sql.delete(Note.__table__, Note.id == note)
+        result = conn.execute(query)
+        query = sql.delete(Connection.__table__, Connection.origin == note)
+        result = conn.execute(query)
+        query = sql.delete(Connection.__table__, Connection.target == note)
+        result = conn.execute(query)
+        return jsonify({"status" : "ok", "message": "deleted"})
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 @app.route("/register")
 def register():
