@@ -51,8 +51,9 @@ export var api = {
                          function(data) { callback(data.id); });
   },
   getWorkspace : function(id, callback) {
-    attemptAPIGetRequest("/api/workspace/" + id,
-                         function(data) { callback(data.notes, data.connections); });
+    attemptAPIGetRequest(
+        "/api/workspace/" + id,
+        function(data) { callback(data.notes, data.connections); });
   },
   deleteWorkspace : function(id, callback) {
     attemptAPIGetRequest("/api/workspace/delete/" + id,
@@ -65,7 +66,7 @@ export var api = {
   connectNotes : function(id, origin, target, callback) {
     attemptAPIGetRequest(
         "/api/workspace/" + id + "/connect/" + origin + "/" + target,
-        function(data) { callback(data.origin, data.target); });
+        function(data) { callback(data.id, data.origin, data.target); });
   },
   updateNote : function(id, note, callback) {
     attemptAPIGetRequest("/api/workspace/" + id + "/update/" + note,

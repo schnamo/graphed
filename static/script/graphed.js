@@ -6,10 +6,14 @@ var overlay;
 var nodes = [];
 var z = 1;
 var offset = [ 0, 0 ];
+var origin = [ 0, 0 ];
+var active;
+var grabbed = false;
 
 function createDiv() { return div; }
 
-function Node() {
+function Node(id, name) {
+  this.id = id;
   this.x = canvas.width / 2;
   this.y = canvas.height / 2;
   this.Fx = 0;
@@ -17,16 +21,34 @@ function Node() {
   this.neighbours = [];
 
   this.div = document.createElement('div');
+  var title = document.createElement('div');
+  title.classList.add('title');
+  var heading = document.createElement('h3');
+  heading.appendChild(document.createTextNode(name));
+  title.appendChild(heading);
   var shrink = document.createElement('div');
   shrink.classList.add('shrink');
   shrink.appendChild(document.createTextNode('x'));
   shrink.addEventListener('click', () => { this.shrink(); });
-  this.div.appendChild(shrink);
+  var plus = document.createElement('div');
+  plus.appendChild(document.createTextNode('+'));
+  plus.addEventListener('click', e => {
+    api.createNote(active, "test", note => {
+      api.connectNotes(active, this.id, note.id, (id, origin, target) => {
+        // TODO save ID
+        var node = new Node(note.id, note.name);
+        node.setPosition(e.clientX, e.clientY);
+        this.addNeighbour(node);
+        addNode(node);
+      });
+    });
+  });
+  this.div.appendChild(plus);
+  title.appendChild(shrink);
+  this.div.appendChild(title);
   this.div.classList.add('note');
   overlay.appendChild(this.div);
 
-  this.div.style.top = this.x + "px";
-  this.div.style.left = this.y + "px";
   this.expanded = false;
   this.selected = false;
 
@@ -48,14 +70,17 @@ function Node() {
   };
 
   this.renderEdges = function(ctx) {
-    ctx.strokeStyle = "#CCC";
-    ctx.lineWidth = 3;
-    var rect = this.div.getBoundingClientRect();
     for (var neighbour of this.neighbours) {
-      var other = neighbour.div.getBoundingClientRect();
+      if (this.expanded || neighbour.expanded) {
+        ctx.strokeStyle = "#31a9f3";
+        ctx.lineWidth = 4;
+      } else {
+        ctx.strokeStyle = "#CCC";
+        ctx.lineWidth = 3;
+      }
       ctx.beginPath();
-      ctx.moveTo(this.x, this.y);
-      ctx.lineTo(neighbour.x, neighbour.y);
+      ctx.moveTo(-origin[0] + this.x, -origin[1] + this.y);
+      ctx.lineTo(-origin[0] + neighbour.x, -origin[1] + neighbour.y);
       ctx.stroke();
     }
   };
@@ -75,8 +100,10 @@ function Node() {
   this.setPosition = function(x, y) {
     this.x = x;
     this.y = y;
-    this.div.style.left = (this.x - this.div.offsetWidth / 2) + "px";
-    this.div.style.top = (this.y - this.div.offsetHeight / 2) + "px";
+    this.div.style.left =
+        (-origin[0] + this.x - this.div.offsetWidth / 2) + "px";
+    this.div.style.top =
+        (-origin[1] + this.y - this.div.offsetHeight / 2) + "px";
   };
 
   this.contains = function(x, y) {
@@ -93,6 +120,8 @@ function Node() {
              rect.top + rect.height + 50 < other.top ||
              other.top + other.height + 50 < rect.top);
   };
+
+  this.setPosition(this.x, this.y);
 }
 
 function distance(x1, x2, y1, y2) {
@@ -120,15 +149,15 @@ function update() {
             other.neighbours.includes(node)) {
           var temp = nDistance(other, node);
           if (!other.expanded) {
-            fspringx += 0.0025 * Math.log(temp) * (other.x - node.x);
-            fspringy += 0.0025 * Math.log(temp) * (other.y - node.y);
+            fspringx += 0.005 * Math.log(temp) * (other.x - node.x);
+            fspringy += 0.005 * Math.log(temp) * (other.y - node.y);
           } else {
             fspringx += 0.00075 * Math.log(temp) * (other.x - node.x);
             fspringy += 0.00075 * Math.log(temp) * (other.y - node.y);
           }
         }
-        frepx += 500 / (nDistance(other, node)) * (node.x - other.x);
-        frepy += 500 / (nDistance(other, node)) * (node.y - other.y);
+        frepx += 120 / nDistance(other, node) * (node.x - other.x);
+        frepy += 120 / nDistance(other, node) * (node.y - other.y);
       }
     }
 
@@ -170,12 +199,16 @@ $(document).ready(function() {
     for (var node of nodes) {
       if (node.selected) {
         node.setPosition(mousePos.x - offset[0], mousePos.y - offset[1]);
-        break;
+        return;
       }
+    }
+    if (grabbed) {
+      origin = [ -e.clientX + offset[0], -e.clientY + offset[1] ];
     }
   }, false);
 
   overlay.addEventListener('mousedown', function(e) {
+    grabbed = true;
     var mousePos = getMousePos(overlay, e);
     for (var node of nodes) {
       node.selected = false;
@@ -189,8 +222,9 @@ $(document).ready(function() {
         ];
         node.selected = true;
         node.expand();
-        break;
+        return;
       }
+      offset = [ origin[0] + e.clientX, origin[1] + e.clientY ];
     }
   });
 
@@ -198,25 +232,31 @@ $(document).ready(function() {
     for (var node of nodes) {
       node.selected = false;
     }
+    grabbed = false;
   });
 
-  var node1 = new Node();
-  addNode(node1);
-  var node2 = new Node();
-  node2.setPosition(300, 400);
-  addNode(node2);
-  node1.addNeighbour(node2);
-  var node3 = new Node();
-  addNode(node3);
-  node3.setPosition(800, 600);
-  node1.addNeighbour(node3);
-  node2.addNeighbour(node3);
-  var node4 = new Node();
-  addNode(node4);
-  node4.setPosition(800, 601);
-  node3.addNeighbour(node4);
-  var node5 = new Node();
-  addNode(node5);
-  node5.setPosition(800, 605);
-  node5.addNeighbour(node3);
+  api.getWorkspaces(function(workspaces) {
+    active = workspaces[0].id;
+    api.getWorkspace(active, function(notes, connections) {
+      for (var note of notes) {
+        var node = new Node(note.id, note.name);
+        node.setPosition(node.x + Math.random() * 50 - 25,
+                         node.y + Math.random() * 50 - 25);
+        addNode(node);
+      }
+      for (var connection of connections) {
+        for (var node of nodes) {
+          if (node.id === connection.origin) {
+            for (var other of nodes) {
+              if (node !== other && other.id === connection.target) {
+                node.addNeighbour(other);
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
+    });
+  });
 });

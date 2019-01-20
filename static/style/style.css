@@ -22,14 +22,16 @@ body {
   width: 100%;
   height: 100vh;
   pointer-events: all;
+  cursor: grab;
 }
 
 .note {
   background-color: #FFF;
   min-width: 50px;
-  min-height: 50px;
-  max-width: 200px;
-  max-height: 50px;
+  min-height: 40px;
+  max-width: 300px;
+  max-height: 40px;
+  width: auto;
   display: block;
   border-radius: 5px;
   position: absolute;
@@ -37,17 +39,28 @@ body {
   transition: box-shadow 100ms, min-width 500ms, min-height 500ms, max-width 500ms, max-height 500ms;
   overflow: hidden;
   z-index: 0;
+  padding: 5px;
+  box-sizing: border-box;
+  cursor: pointer;
 }
 
-.note .shrink {
+.note .title {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.note .title h3 {
+  margin: 0px; 
+  margin-right: auto;
+}
+
+.note .title .shrink {
   visibility: hidden;
   opacity: 0;
   transition: opacity 500ms;
   cursor: pointer;
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: white;
+  margin-left: auto;
 }
 
 .note:hover {
@@ -59,6 +72,7 @@ body {
   min-height: 300px;
   max-width: 500px;
   max-height: 500px;
+  cursor: default;
 }
 
 .note.expanded .shrink {
