@@ -5,7 +5,7 @@ import sqlalchemy as db
 from sqlalchemy import sql, update
 from binascii import b2a_hex, a2b_hex
 from hashlib import sha256
-from os import urandom
+from os import urandom, path
 import re
 
 app = Flask(__name__)
@@ -226,6 +226,25 @@ def create_user():
     res = conn.execute(query)
     return jsonify({ "status": "ok" })
 
+@app.route("/api/workspace/<int:id>/note/<int:note>")
+def get_note(id, note):
+    try:
+        owner = authenticate()
+
+        filename = "notes/" + str(note) + ".txt"
+        if path.isfile(filename):
+            with open(filename, 'r') as content_file:
+                content = content_file.read()
+                return jsonify({
+                    "status" : "ok",
+                    "content" : content,
+                })
+        else:
+            return jsonify({"status": "error", "message": "No such note file"})
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
+
+
 # Create note in workspace
 @app.route("/api/workspace/<int:id>/create/<name>")
 def create_note(id, name):
@@ -240,6 +259,8 @@ def create_note(id, name):
                     }
                 )
         result = conn.execute(query)
+        with open("notes/" + str(result.lastrowid) + ".txt", "w") as f:
+            pass
         return jsonify({
                 "status": "ok",
                 "note": {
@@ -288,24 +309,12 @@ def connect_notes(id, origin, target):
 # Update note
 @app.route("/api/workspace/<int:id>/update/<int:note>", methods=['GET', 'POST'])
 def update_note(id, note):
-    pass
-    # try:
-    #     owner = authenticate()
-    #
-    #     conn = engine.connect()
-    #     query = sql.update([Note.__table__]).\
-    #         values(Note.name = note).\
-    #         where(Note.workspace == id)
-    #     result = conn.execute(query)
-    #     return jsonify({
-    #             "status": "ok",
-    #             "note": {
-    #                 "id": result.id,
-    #                 "name": result.name
-    #             }
-    #         })
-    # except MissingInformation as e:
-    #     return jsonify({"status": "error", "message": e.message})
+    try:
+        owner = authenticate()
+
+        return jsonify({"status": "ok"})
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
 
 # Remove note from workspace
 @app.route("/api/workspace/<int:id>/remove/<int:note>")
