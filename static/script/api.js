@@ -65,7 +65,11 @@ export var api = {
   connectNotes : function(id, origin, target, callback) {
     attemptAPIGetRequest(
         "/api/workspace/" + id + "/connect/" + origin + "/" + target,
-        function(data) { callback(data.origin, data.target); });
+        function(data) { callback(data.connection); });
+  },
+  removeConnection : function(id, connectionId, callback) {
+    attemptAPIGetRequest("/api/workspace/" + id + "/disconnect/" + connectionId,
+                         function(data) { callback(); });
   },
   updateNote : function(id, note, callback) {
     attemptAPIGetRequest("/api/workspace/" + id + "/update/" + note,
