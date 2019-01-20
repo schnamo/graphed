@@ -5,10 +5,11 @@
     {% if authenticated %}
       <script type="module" src="/static/script/graphed.js"></script>
     {% endif %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js">
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Sarabun" rel="stylesheet">
     <link rel="stylesheet" href="/static/style/style.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.materialdesignicons.com/3.2.89/css/materialdesignicons.min.css"/>
+    {% block styles %}{% endblock %}
   </head>
   <body>
     {% block content %}{% endblock %}
