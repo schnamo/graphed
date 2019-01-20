@@ -55,7 +55,7 @@ export var api = {
                          function(data) { callback(data.notes, data.connections); });
   },
   deleteWorkspace : function(id, callback) {
-    attemptAPIGetRequest("/api/workspace/" + id,
+    attemptAPIGetRequest("/api/workspace/delete/" + id,
                          function(data) { callback(); });
   },
   createNote : function(id, name, callback) {
