@@ -89,6 +89,25 @@ def create_workspace(name):
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
+# Update workspace name
+@app.route("/api/workspace/<int:id>/rework/<name>")
+def rename_workspace(id, name):
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+        query = sql.update(Workspace.__table__, values={Workspace.name: name}).where(Workspace.id == id)
+        result = conn.execute(query)
+        return jsonify({
+                "status": "ok",
+                "note": {
+                    "id": id,
+                    "name": name,
+                }
+            })
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
+
 # Return all notes and connections in workspace (list of notes)
 @app.route("/api/workspace/<int:id>")
 def get_workspace(id):
@@ -304,6 +323,29 @@ def connect_notes(id, origin, target):
                     "id": result.lastrowid,
                     "origin": origin_insert,
                     "target": target_insert,
+                }
+            })
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
+
+# Update note name
+@app.route("/api/workspace/<int:id>/rename/<int:note>/<name>")
+def rename_note(id, note, name):
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+        #db.update(table_name).values(attribute = new_value).where(condition)
+        query = sql.update(Note.__table__, values={Note.name: name}).where(Note.id == note)
+        # query = sql.update(Note.__table__)\
+        #         .values(Note.name = name)\
+        #         .where(Note.id == note)
+        result = conn.execute(query)
+        return jsonify({
+                "status": "ok",
+                "note": {
+                    "id": note,
+                    "name": name,
                 }
             })
     except MissingInformation as e:
