@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 
+{% block styles %}
+  {% if not authenticated %}
+    <link rel="stylehsheet" type="text/css" href="/static/style/login.css">
+  {% endif %}
+{% endblock %}
+
 {% block content %}
   {% if not authenticated %}
     <div class="container">

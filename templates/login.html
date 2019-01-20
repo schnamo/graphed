@@ -1,52 +1,29 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
-        <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
-        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.6/umd/popper.min.js" integrity="sha384-wHAiFfRlMFy6i5SRaxvfOCifBUQy1xHdJ/yoi7FRNXMRBu5WHdZYu1hA6ZOblgut" crossorigin="anonymous"></script>
-        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/js/bootstrap.min.js" integrity="sha384-B0UglyR+jN6CkvvICOB2joaf5I4l3gm9GU6Hc1og6Ls7i6U/mkkaduKaBhlAXv9k" crossorigin="anonymous"></script>
-    </head>
-<body>
-  <div class="container">
-    <div class="row">
-      <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
-        <div class="card card-signin my-5">
-          <img class="card-img-top" src="/static/images/logo.png" style="width:125px;height:150px;display:block;margin:0 auto;padding-top: 25px;"alt="Card image cap">
-
-          <div class="card-body">
-            <h5 class="card-title text-center">Sign In</h5>
-            <form class="form-signin">
-              <div class="form-label-group">
-                <input type="text" id="username" class="form-control" placeholder="Username" minlength="3" maxlength="32" required autofocus>
-                <label for="username">Username</label>
-              </div>
-
-              <div class="form-label-group">
-                <input type="password" id="password" class="form-control" placeholder="Password" minlength="8" maxlength="32" required>
-                <label for="password">Password</label>
-              </div>
-              <button class="btn btn-lg btn-primary btn-block text-uppercase" type="submit" id="login">Sign in</button>
-              <hr class="my-4">
-              <a class="btn btn-lg btn-google btn-block text-uppercase" href="/register">Register</a>
-            </form>
-          </div>
-        </div>
-      </div>
+<img src="/static/images/logo.png" style="width:125px;height:150px;display:block;margin:0 auto;padding-top: 25px;">
+<div>
+  <h5>Sign In</h5>
+  <form>
+    <div>
+      <input type="text" id="username" placeholder="Username" minlength="3" maxlength="32" required autofocus>
+      <label for="username">Username</label>
     </div>
-      <script type="module">
-        import {api} from '/static/script/api.js';
-        $(document).ready(function() {
-          $('#login').on('click', function(e) {
-            e.preventDefault();
-            var username = document.getElementById("username").value;
-            var password = document.getElementById("password").value;
-            api.getToken(username, password, function(token) {
-              window.location = "/";
-            });
-          });
+    <div>
+      <input type="password" id="password" placeholder="Password" minlength="8" maxlength="32" required>
+      <label for="password">Password</label>
+    </div>
+    <button type="submit" id="login">Sign in</button>
+    <a href="/register">Register</a>
+  </form>
+</div>
+<script type="module">
+  import {api} from '/static/script/api.js';
+    $(document).ready(function() {
+      $('#login').on('click', function(e) {
+        e.preventDefault();
+        var username = document.getElementById("username").value;
+        var password = document.getElementById("password").value;
+        api.getToken(username, password, function(token) {
+          window.location = "/";
         });
-      </script>
-  </div>
-</body>
-</html>
+      });
+    });
+</script>

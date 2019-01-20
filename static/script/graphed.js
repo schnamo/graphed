@@ -9,6 +9,8 @@ var offset = [ 0, 0 ];
 var origin = [ 0, 0 ];
 var active;
 var grabbed = false;
+var connecting = false;
+var firstConnected = undefined;
 
 function createDiv() { return div; }
 
@@ -27,41 +29,68 @@ function Node(id, name) {
   var heading = document.createElement('h3');
   heading.appendChild(document.createTextNode(name));
   title.appendChild(heading);
+  var controls = document.createElement('div');
+  controls.classList.add('controls');
   var shrink = document.createElement('div');
   shrink.classList.add('shrink');
-  shrink.appendChild(document.createTextNode('x'));
+  shrink.classList.add('button');
+  shrink.innerHTML = '<span class="mdi mdi-arrow-collapse"></span>';
   shrink.addEventListener('click', () => { this.shrink(); });
   var content = document.createElement('div');
-  content.classList.add('content');
+  content.classList.add('internal');
   var plus = document.createElement('a');
-  plus.appendChild(document.createTextNode('+'));
+  plus.classList.add('plus');
+  plus.classList.add('button');
+  plus.innerHTML = '<span class="mdi mdi-plus"></span>';
   plus.addEventListener('click', e => {
-    api.createNote(active, "test", note => {
+    api.createNote(active, "New Note", note => {
       api.connectNotes(active, this.id, note.id, connection => {
-        // TODO save ID
-        var node = new Node(note.id, note.name);
-        node.setPosition(e.clientX, e.clientY);
-        this.addNeighbour(node);
-        node.expand();
-        addNode(node);
+        if (!connecting) {
+          // TODO save ID
+          var node = new Node(note.id, note.name);
+          node.setPosition(e.clientX, e.clientY);
+          this.addNeighbour(node);
+          node.expand();
+          addNode(node);
+        }
       });
     });
   });
-  content.appendChild(plus);
-  var body = document.createElement('input');
-  body.setAttribute('type', 'text');
+  var bin = document.createElement('a');
+  bin.classList.add('delete');
+  bin.classList.add('button');
+  bin.innerHTML = '<span class="mdi mdi-delete"></span>';
+  bin.addEventListener('click', e => {
+    if (!connecting) {
+      api.removeNote(active, this.id, () => {
+        overlay.removeChild(this.div);
+        nodes.splice(nodes.indexOf(this), 1);
+        for (var node of nodes) {
+          if (node.neighbours.includes(this))
+            node.neighbours.splice(node.neighbours.indexOf(this), 1);
+        }
+      });
+    }
+  });
+  controls.appendChild(bin);
+  controls.appendChild(plus);
+  controls.appendChild(shrink);
+  title.appendChild(controls);
+  var body = document.createElement('textarea');
+  body.setAttribute('placeholder', 'Empty note');
   api.getNote(active, id, content => {
-    body.value = content;
-    this.previousContent = content;
-    setInterval(() => {
-      if (body.value != this.previousContent) {
-        this.previousContent = body.value;
-        api.updateNote(active, id, body.value, () => {});
-      }
-    }, 1000);
+    if (!connecting) {
+      body.value = content;
+      this.previousContent = content;
+      setInterval(() => {
+        if (body.value != this.previousContent) {
+          this.previousContent = body.value;
+          api.updateNote(active, id, body.value, () => {});
+        }
+      }, 1000);
+    }
   });
   content.appendChild(body);
-  title.appendChild(shrink);
   this.div.appendChild(title);
   this.div.appendChild(content);
   this.div.classList.add('note');
@@ -126,8 +155,9 @@ function Node(id, name) {
 
   this.contains = function(x, y) {
     var rect = this.div.getBoundingClientRect();
-    return x > rect.left && x < rect.left + rect.width && y > rect.top &&
-           y < rect.top + rect.height;
+    var subrect = this.div.querySelector('.internal').getBoundingClientRect();
+    return (x > rect.left && x < rect.left + rect.width && y > rect.top &&
+            y < rect.top + rect.height);
   };
 
   this.intersects = function(node) {
@@ -174,8 +204,8 @@ function update() {
             fspringy += 0.00075 * Math.log(temp) * (other.y - node.y);
           }
         }
-        frepx += 120 / nDistance(other, node) * (node.x - other.x);
-        frepy += 120 / nDistance(other, node) * (node.y - other.y);
+        frepx += 200 / nDistance(other, node) * (node.x - other.x);
+        frepy += 200 / nDistance(other, node) * (node.y - other.y);
       }
     }
 
@@ -212,6 +242,11 @@ $(document).ready(function() {
   ctx = canvas.getContext('2d');
   update();
 
+  $('#enter_connection_mode').on('click', () => {
+    connecting = true;
+    overlay.classList.add('connecting');
+  });
+
   overlay.addEventListener('mousemove', function(e) {
     var mousePos = getMousePos(overlay, e);
     for (var node of nodes) {
@@ -226,19 +261,42 @@ $(document).ready(function() {
   }, false);
 
   overlay.addEventListener('mousedown', function(e) {
-    grabbed = true;
-    var mousePos = getMousePos(overlay, e);
-    for (var node of nodes) {
-      node.selected = false;
-    }
-    for (var node of nodes) {
-      if (node.contains(mousePos.x, mousePos.y)) {
-        offset = [ mousePos.x - node.x, mousePos.y - node.y ];
-        node.selected = true;
-        node.expand();
-        return;
+    if (!connecting) {
+      grabbed = true;
+      var mousePos = getMousePos(overlay, e);
+      for (var node of nodes) {
+        node.selected = false;
       }
-      offset = [ origin[0] + e.clientX, origin[1] + e.clientY ];
+      for (var node of nodes) {
+        if (node.contains(mousePos.x, mousePos.y)) {
+          offset = [ mousePos.x - node.x, mousePos.y - node.y ];
+          node.selected = true;
+          node.expand();
+          return;
+        }
+        offset = [ origin[0] + e.clientX, origin[1] + e.clientY ];
+      }
+    } else {
+      var mousePos = getMousePos(overlay, e);
+      for (var node of nodes) {
+        if (node.contains(mousePos.x, mousePos.y)) {
+          if (firstConnected == undefined) {
+            firstConnected = node;
+            node.div.classList.add('highlight');
+            break;
+          } else {
+            var other = firstConnected;
+            api.connectNotes(
+                active, node.id, firstConnected.id,
+                function(connection) { other.addNeighbour(node); });
+            connecting = false;
+            firstConnected.div.classList.remove('highlight');
+            firstConnected = undefined;
+            overlay.classList.remove('connecting');
+            break;
+          }
+        }
+      }
     }
   });
 
