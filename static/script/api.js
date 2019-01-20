@@ -76,9 +76,9 @@ export var api = {
     attemptAPIGetRequest("/api/workspace/" + id + "/note/" + note,
                          function(data) { callback(data.content); });
   },
-  updateNote : function(id, note, callback) {
-    attemptAPIGetRequest("/api/workspace/" + id + "/update/" + note,
-                         function(data) { callback(); });
+  updateNote : function(id, note, content, callback) {
+    attemptAPIPostRequest("/api/workspace/" + id + "/update/" + note,
+                          {content : content}, function(data) { callback(); });
   },
   removeNote : function(id, note, callback) {
     attemptAPIGetRequest("/api/workspace/" + id + "/remove/" + note,

@@ -19,6 +19,7 @@ function Node(id, name) {
   this.Fx = 0;
   this.Fy = 0;
   this.neighbours = [];
+  this.previousContent = "";
 
   this.div = document.createElement('div');
   var title = document.createElement('div');
@@ -47,6 +48,19 @@ function Node(id, name) {
     });
   });
   content.appendChild(plus);
+  var body = document.createElement('input');
+  body.setAttribute('type', 'text');
+  api.getNote(active, id, content => {
+    body.value = content;
+    this.previousContent = content;
+    setInterval(() => {
+      if (body.value != this.previousContent) {
+        this.previousContent = body.value;
+        api.updateNote(active, id, body.value, () => {});
+      }
+    }, 1000);
+  });
+  content.appendChild(body);
   title.appendChild(shrink);
   this.div.appendChild(title);
   this.div.appendChild(content);
