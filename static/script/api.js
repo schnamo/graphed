@@ -72,6 +72,10 @@ export var api = {
     attemptAPIGetRequest("/api/workspace/" + id + "/disconnect/" + connection,
                          function(data) { callback(); });
   },
+  getNote : function(id, note, callback) {
+    attemptAPIGetRequest("/api/workspace/" + id + "/note/" + note,
+                         function(data) { callback(data.content); });
+  },
   updateNote : function(id, note, callback) {
     attemptAPIGetRequest("/api/workspace/" + id + "/update/" + note,
                          function(data) { callback(); });
