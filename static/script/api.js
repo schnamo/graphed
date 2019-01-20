@@ -64,9 +64,13 @@ export var api = {
                          function(data) { callback(data.note); });
   },
   connectNotes : function(id, origin, target, callback) {
-    attemptAPIGetRequest(
-        "/api/workspace/" + id + "/connect/" + origin + "/" + target,
-        function(data) { callback(data.id, data.origin, data.target); });
+    attemptAPIGetRequest("/api/workspace/" + id + "/connect/" + origin + "/" +
+                             target,
+                         function(data) { callback(data.connection); });
+  },
+  removeConnection : function(id, connection, callback) {
+    attemptAPIGetRequest("/api/workspace/" + id + "/disconnect/" + connection,
+                         function(data) { callback(); });
   },
   updateNote : function(id, note, callback) {
     attemptAPIGetRequest("/api/workspace/" + id + "/update/" + note,

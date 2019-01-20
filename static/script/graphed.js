@@ -30,22 +30,26 @@ function Node(id, name) {
   shrink.classList.add('shrink');
   shrink.appendChild(document.createTextNode('x'));
   shrink.addEventListener('click', () => { this.shrink(); });
-  var plus = document.createElement('div');
+  var content = document.createElement('div');
+  content.classList.add('content');
+  var plus = document.createElement('a');
   plus.appendChild(document.createTextNode('+'));
   plus.addEventListener('click', e => {
     api.createNote(active, "test", note => {
-      api.connectNotes(active, this.id, note.id, (id, origin, target) => {
+      api.connectNotes(active, this.id, note.id, connection => {
         // TODO save ID
         var node = new Node(note.id, note.name);
         node.setPosition(e.clientX, e.clientY);
         this.addNeighbour(node);
+        node.expand();
         addNode(node);
       });
     });
   });
-  this.div.appendChild(plus);
+  content.appendChild(plus);
   title.appendChild(shrink);
   this.div.appendChild(title);
+  this.div.appendChild(content);
   this.div.classList.add('note');
   overlay.appendChild(this.div);
 
@@ -215,11 +219,7 @@ $(document).ready(function() {
     }
     for (var node of nodes) {
       if (node.contains(mousePos.x, mousePos.y)) {
-        var rect = node.div.getBoundingClientRect();
-        offset = [
-          mousePos.x - (rect.left + rect.width / 2),
-          mousePos.y - (rect.top + rect.height / 2)
-        ];
+        offset = [ mousePos.x - node.x, mousePos.y - node.y ];
         node.selected = true;
         node.expand();
         return;

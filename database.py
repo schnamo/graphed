@@ -26,9 +26,10 @@ class Note(Base):
 
 class Connection(Base):
     __tablename__ = "connections"
+    id = Column(Integer, primary_key=True, autoincrement=True)
     workspace = Column(Integer, ForeignKey(Workspace.id))
-    origin = Column(Integer, ForeignKey(Note.id), primary_key=True)
-    target = Column(Integer, ForeignKey(Note.id), primary_key=True)
+    origin = Column(Integer, ForeignKey(Note.id))
+    target = Column(Integer, ForeignKey(Note.id))
 
 class Token(Base):
     __tablename__ = "tokens"

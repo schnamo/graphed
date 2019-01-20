@@ -113,6 +113,7 @@ def get_workspace(id):
         workspace_connections = []
         for connection in connections:
             workspace_connections.append({
+                    "id" : connection.id,
                     "origin" : connection.origin,
                     "target" : connection.target,
                 })
@@ -275,9 +276,11 @@ def connect_notes(id, origin, target):
         result = conn.execute(query)
         return jsonify({
                 "status": "ok",
-                "id": id,
-                "origin": origin_insert,
-                "target": target_insert,
+                "connection": {
+                    "id": result.lastrowid,
+                    "origin": origin_insert,
+                    "target": target_insert,
+                }
             })
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
@@ -316,6 +319,19 @@ def remove_note(id, note):
         query = sql.delete(Connection.__table__, Connection.origin == note)
         result = conn.execute(query)
         query = sql.delete(Connection.__table__, Connection.target == note)
+        result = conn.execute(query)
+        return jsonify({"status" : "ok", "message": "deleted"})
+    except MissingInformation as e:
+        return jsonify({"status": "error", "message": e.message})
+
+# Remove connection from workspace
+@app.route("/api/workspace/<int:id>/disconnect/<int:connection>")
+def remove_connection(id, connection):
+    try:
+        owner = authenticate()
+
+        conn = engine.connect()
+        query = sql.delete(Connection.__table__, Connection.id == connection)
         result = conn.execute(query)
         return jsonify({"status" : "ok", "message": "deleted"})
     except MissingInformation as e:

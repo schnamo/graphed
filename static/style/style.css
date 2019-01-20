@@ -79,3 +79,14 @@ body {
   visibility: visible;
   opacity: 1;
 }
+
+.note .content {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 500ms;
+}
+
+.note.expanded .content {
+  visibility: visible;
+  opacity: 1;
+}
