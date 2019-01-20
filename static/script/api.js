@@ -50,6 +50,10 @@ export var api = {
     attemptAPIGetRequest("/api/workspace/create/" + name,
                          function(data) { callback(data.id); });
   },
+  renameWorkspace : function(id, name, callback) {
+    attemptAPIGetRequest("/api/workspace/" + id + "/rework/" + name,
+                         function(data) { callback(data.workspace); });
+  },
   getWorkspace : function(id, callback) {
     attemptAPIGetRequest(
         "/api/workspace/" + id,
@@ -79,6 +83,10 @@ export var api = {
   updateNote : function(id, note, content, callback) {
     attemptAPIPostRequest("/api/workspace/" + id + "/update/" + note,
                           {content : content}, function(data) { callback(); });
+  },
+  renameNote : function(id, note, name, callback) {
+    attemptAPIGetRequest("/api/workspace/" + id + "/rename/" + note + "/" + name,
+                         function(data) { callback(data.note); });
   },
   removeNote : function(id, note, callback) {
     attemptAPIGetRequest("/api/workspace/" + id + "/remove/" + note,
