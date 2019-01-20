@@ -41,6 +41,17 @@ def authenticate():
     else:
         raise MissingInformation("valid credentials")
 
+def check_owner(owner, workspace_id):
+    conn = engine.connect()
+    workspace_query = sql.select([Workspace.__table__])\
+                .where(Workspace.id == workspace_id)
+    result = conn.execute(workspace_query)
+    workspace = result.fetchone()
+    if workspace is not None:
+        return workspace.owner == owner
+    else:
+        return False
+
 # Return a list of all users workspaces
 @app.route("/api/workspaces")
 def get_workspaces():
@@ -94,17 +105,19 @@ def create_workspace(name):
 def rename_workspace(id, name):
     try:
         owner = authenticate()
-
-        conn = engine.connect()
-        query = sql.update(Workspace.__table__, values={Workspace.name: name}).where(Workspace.id == id)
-        result = conn.execute(query)
-        return jsonify({
-                "status": "ok",
-                "note": {
-                    "id": id,
-                    "name": name,
-                }
-            })
+        if check_owner(owner, id):
+            conn = engine.connect()
+            query = sql.update(Workspace.__table__, values={Workspace.name: name}).where(Workspace.id == id)
+            result = conn.execute(query)
+            return jsonify({
+                    "status": "ok",
+                    "note": {
+                        "id": id,
+                        "name": name,
+                    }
+                })
+        else:
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -113,38 +126,41 @@ def rename_workspace(id, name):
 def get_workspace(id):
     try:
         owner = authenticate()
+        if check_owner(owner, id):
 
-        conn = engine.connect()
+            conn = engine.connect()
 
-        # define query for db request to get all nodes for workspace id
-        notes_query = sql.select([Note.__table__])\
-            .where(Note.workspace == id)
-        # define query for db request to get all nodes for workspace id
-        connections_query = sql.select([Connection.__table__])\
-            .where(Connection.workspace == id)
+            # define query for db request to get all nodes for workspace id
+            notes_query = sql.select([Note.__table__])\
+                .where(Note.workspace == id)
+            # define query for db request to get all nodes for workspace id
+            connections_query = sql.select([Connection.__table__])\
+                .where(Connection.workspace == id)
 
-        notes = conn.execute(notes_query).fetchall()
-        connections = conn.execute(connections_query).fetchall()
+            notes = conn.execute(notes_query).fetchall()
+            connections = conn.execute(connections_query).fetchall()
 
-        workspace_notes = []
-        for note in notes:
-            workspace_notes.append({
-                    "id": note.id,
-                    "name": note.name
+            workspace_notes = []
+            for note in notes:
+                workspace_notes.append({
+                        "id": note.id,
+                        "name": note.name
+                    })
+            workspace_connections = []
+            for connection in connections:
+                workspace_connections.append({
+                        "id" : connection.id,
+                        "origin" : connection.origin,
+                        "target" : connection.target,
+                    })
+
+            return jsonify({
+                    "status" : "ok",
+                    "notes" : workspace_notes,
+                    "connections" : workspace_connections,
                 })
-        workspace_connections = []
-        for connection in connections:
-            workspace_connections.append({
-                    "id" : connection.id,
-                    "origin" : connection.origin,
-                    "target" : connection.target,
-                })
-
-        return jsonify({
-                "status" : "ok",
-                "notes" : workspace_notes,
-                "connections" : workspace_connections,
-            })
+        else:
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -154,15 +170,18 @@ def get_workspace(id):
 def delete_workspace(id):
     try:
         owner = authenticate()
+        if check_owner(owner, id):
 
-        conn = engine.connect()
-        query = sql.delete(Note.__table__, Note.workspace == id)
-        result = conn.execute(query)
-        query = sql.delete(Connection.__table__, Connection.workspace == id)
-        result = conn.execute(query)
-        query = sql.delete(Workspace.__table__, Workspace.id == id)
-        result = conn.execute(query)
-        return jsonify({"status" : "ok", "message": "deleted"})
+            conn = engine.connect()
+            query = sql.delete(Note.__table__, Note.workspace == id)
+            result = conn.execute(query)
+            query = sql.delete(Connection.__table__, Connection.workspace == id)
+            result = conn.execute(query)
+            query = sql.delete(Workspace.__table__, Workspace.id == id)
+            result = conn.execute(query)
+            return jsonify({"status" : "ok", "message": "deleted"})
+        else:
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -272,24 +291,27 @@ def get_note(id, note):
 def create_note(id):
     try:
         owner = authenticate()
+        if check_owner(owner, id):
 
-        conn = engine.connect()
-        query = sql.insert(Note.__table__,
-                values={
-                    Note.name: "",
-                    Note.workspace: id
+            conn = engine.connect()
+            query = sql.insert(Note.__table__,
+                    values={
+                        Note.name: "",
+                        Note.workspace: id
+                        }
+                    )
+            result = conn.execute(query)
+            with open("notes/" + str(result.lastrowid) + ".txt", "w") as f:
+                pass
+            return jsonify({
+                    "status": "ok",
+                    "note": {
+                        "id": result.lastrowid,
+                        "name": ""
                     }
-                )
-        result = conn.execute(query)
-        with open("notes/" + str(result.lastrowid) + ".txt", "w") as f:
-            pass
-        return jsonify({
-                "status": "ok",
-                "note": {
-                    "id": result.lastrowid,
-                    "name": ""
-                }
-            })
+                })
+        else:
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -298,33 +320,36 @@ def create_note(id):
 def connect_notes(id, origin, target):
     try:
         owner = authenticate()
+        if check_owner(owner, id):
 
-        conn = engine.connect()
-        if origin < target:
-            origin_insert = origin
-            target_insert = target
-        elif origin > target:
-            origin_insert = target
-            target_insert = origin
-        else:
-            raise InvalidInformation("Note cannot reference to itself.")
+            conn = engine.connect()
+            if origin < target:
+                origin_insert = origin
+                target_insert = target
+            elif origin > target:
+                origin_insert = target
+                target_insert = origin
+            else:
+                raise InvalidInformation("Note cannot reference to itself.")
 
-        query = sql.insert(Connection.__table__,
-                values={
-                    Connection.workspace: id,
-                    Connection.origin: origin_insert,
-                    Connection.target: target_insert,
+            query = sql.insert(Connection.__table__,
+                    values={
+                        Connection.workspace: id,
+                        Connection.origin: origin_insert,
+                        Connection.target: target_insert,
+                        }
+                    )
+            result = conn.execute(query)
+            return jsonify({
+                    "status": "ok",
+                    "connection": {
+                        "id": result.lastrowid,
+                        "origin": origin_insert,
+                        "target": target_insert,
                     }
-                )
-        result = conn.execute(query)
-        return jsonify({
-                "status": "ok",
-                "connection": {
-                    "id": result.lastrowid,
-                    "origin": origin_insert,
-                    "target": target_insert,
-                }
-            })
+                })
+        else:
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -333,21 +358,24 @@ def connect_notes(id, origin, target):
 def rename_note(id, note, name):
     try:
         owner = authenticate()
+        if check_owner(owner, id):
 
-        conn = engine.connect()
-        #db.update(table_name).values(attribute = new_value).where(condition)
-        query = sql.update(Note.__table__, values={Note.name: name}).where(Note.id == note)
-        # query = sql.update(Note.__table__)\
-        #         .values(Note.name = name)\
-        #         .where(Note.id == note)
-        result = conn.execute(query)
-        return jsonify({
-                "status": "ok",
-                "note": {
-                    "id": note,
-                    "name": name,
-                }
-            })
+            conn = engine.connect()
+            #db.update(table_name).values(attribute = new_value).where(condition)
+            query = sql.update(Note.__table__, values={Note.name: name}).where(Note.id == note)
+            # query = sql.update(Note.__table__)\
+            #         .values(Note.name = name)\
+            #         .where(Note.id == note)
+            result = conn.execute(query)
+            return jsonify({
+                    "status": "ok",
+                    "note": {
+                        "id": note,
+                        "name": name,
+                    }
+                })
+        else:
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -356,6 +384,7 @@ def rename_note(id, note, name):
 def update_note(id, note):
     try:
         owner = authenticate()
+        #if check_owner(owner, id):
 
         content = request.form["content"]
         filename = "notes/" + str(note) + ".txt"
@@ -365,6 +394,8 @@ def update_note(id, note):
                 return jsonify({"status": "ok"})
         else:
             return jsonify({"status": "error", "message": "No such note"})
+        #else:
+        #    raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -373,24 +404,27 @@ def update_note(id, note):
 def remove_note(id, note):
     try:
         owner = authenticate()
+        if check_owner(owner, id):
 
-        conn = engine.connect()
+            conn = engine.connect()
 
-        # define query for db request to get all nodes for workspace id
-        notes_query = sql.select([Note.__table__])\
-                .where(Note.workspace == id)
-        notes = conn.execute(notes_query).fetchall()
+            # define query for db request to get all nodes for workspace id
+            notes_query = sql.select([Note.__table__])\
+                    .where(Note.workspace == id)
+            notes = conn.execute(notes_query).fetchall()
 
-        if len(notes) < 2:
-            return jsonify({"status" : "ok", "message": "Not possible to remove last note in workspace"})
+            if len(notes) < 2:
+                return jsonify({"status" : "ok", "message": "Not possible to remove last note in workspace"})
+            else:
+                query = sql.delete(Note.__table__, Note.id == note)
+                result = conn.execute(query)
+                query = sql.delete(Connection.__table__, Connection.origin == note)
+                result = conn.execute(query)
+                query = sql.delete(Connection.__table__, Connection.target == note)
+                result = conn.execute(query)
+                return jsonify({"status" : "ok", "message": "deleted"})
         else:
-            query = sql.delete(Note.__table__, Note.id == note)
-            result = conn.execute(query)
-            query = sql.delete(Connection.__table__, Connection.origin == note)
-            result = conn.execute(query)
-            query = sql.delete(Connection.__table__, Connection.target == note)
-            result = conn.execute(query)
-            return jsonify({"status" : "ok", "message": "deleted"})
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -399,11 +433,14 @@ def remove_note(id, note):
 def remove_connection(id, connection):
     try:
         owner = authenticate()
+        if check_owner(owner, id):
 
-        conn = engine.connect()
-        query = sql.delete(Connection.__table__, Connection.id == connection)
-        result = conn.execute(query)
-        return jsonify({"status" : "ok", "message": "deleted"})
+            conn = engine.connect()
+            query = sql.delete(Connection.__table__, Connection.id == connection)
+            result = conn.execute(query)
+            return jsonify({"status" : "ok", "message": "deleted"})
+        else:
+            raise InvalidInformation("You don't have access to this workspace.")
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
