@@ -375,13 +375,22 @@ def remove_note(id, note):
         owner = authenticate()
 
         conn = engine.connect()
-        query = sql.delete(Note.__table__, Note.id == note)
-        result = conn.execute(query)
-        query = sql.delete(Connection.__table__, Connection.origin == note)
-        result = conn.execute(query)
-        query = sql.delete(Connection.__table__, Connection.target == note)
-        result = conn.execute(query)
-        return jsonify({"status" : "ok", "message": "deleted"})
+
+        # define query for db request to get all nodes for workspace id
+        notes_query = sql.select([Note.__table__])\
+                .where(Note.workspace == id)
+        notes = conn.execute(notes_query).fetchall()
+
+        if len(notes) < 2:
+            return jsonify({"status" : "ok", "message": "Not possible to remove last note in workspace"})
+        else:
+            query = sql.delete(Note.__table__, Note.id == note)
+            result = conn.execute(query)
+            query = sql.delete(Connection.__table__, Connection.origin == note)
+            result = conn.execute(query)
+            query = sql.delete(Connection.__table__, Connection.target == note)
+            result = conn.execute(query)
+            return jsonify({"status" : "ok", "message": "deleted"})
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
