@@ -1,0 +1,92 @@
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.workspace {
+  position: relative;
+}
+
+#graph {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+#overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  pointer-events: all;
+  cursor: grab;
+}
+
+.note {
+  background-color: #FFF;
+  min-width: 50px;
+  min-height: 40px;
+  max-width: 300px;
+  max-height: 40px;
+  width: auto;
+  display: block;
+  border-radius: 5px;
+  position: absolute;
+  box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 100ms, min-width 500ms, min-height 500ms, max-width 500ms, max-height 500ms;
+  overflow: hidden;
+  z-index: 0;
+  padding: 5px;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.note .title {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.note .title h3 {
+  margin: 0px; 
+  margin-right: auto;
+}
+
+.note .title .shrink {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 500ms;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.note:hover {
+  box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.2);
+}
+
+.note.expanded {
+  min-width: 300px;
+  min-height: 300px;
+  max-width: 500px;
+  max-height: 500px;
+  cursor: default;
+}
+
+.note.expanded .shrink {
+  visibility: visible;
+  opacity: 1;
+}
+
+.note .content {
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 500ms;
+}
+
+.note.expanded .content {
+  visibility: visible;
+  opacity: 1;
+}

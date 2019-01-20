@@ -307,12 +307,19 @@ def connect_notes(id, origin, target):
         return jsonify({"status": "error", "message": e.message})
 
 # Update note
-@app.route("/api/workspace/<int:id>/update/<int:note>", methods=['GET', 'POST'])
+@app.route("/api/workspace/<int:id>/update/<int:note>", methods=['POST'])
 def update_note(id, note):
     try:
         owner = authenticate()
 
-        return jsonify({"status": "ok"})
+        content = request.form["content"]
+        filename = "notes/" + str(note) + ".txt"
+        if path.isfile(filename):
+            with open(filename, "w") as f:
+                f.write(content)
+                return jsonify({"status": "ok"})
+        else:
+            return jsonify({"status": "error", "message": "No such note"})
     except MissingInformation as e:
         return jsonify({"status": "error", "message": e.message})
 
@@ -350,7 +357,7 @@ def remove_connection(id, connection):
 def register():
     try:
         owner = authenticate()
-        return redirect("/workspaces")
+        return redirect("/")
     except MissingInformation as e:
         return render_template('register.html')
 
