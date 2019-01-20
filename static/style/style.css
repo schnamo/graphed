@@ -2,10 +2,39 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  font-family: 'Sarabun', sans-serif;
+  padding: 0px;
+  margin: 0px;
 }
 
-.workspace {
+h1, h2, h3, h4, h5 {
+  font-weight: normal;
+}
+
+.content {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  height: 100%;
+}
+
+#sidenav {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 300px;
+  height: 100%;
+  box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  z-index: 1000000;
+  pointer-events: all;
+}
+
+#workspace {
   position: relative;
+  left: 0;
+  top: 0;
+  width: 100%;
 }
 
 #graph {
@@ -25,22 +54,29 @@ body {
   cursor: grab;
 }
 
+#overlay.connecting .note:hover {
+  border: solid 3px #CCC;
+}
+
+#overlay.connecting .note.highlight {
+  border: solid 3px #31a9f3;
+}
+
 .note {
   background-color: #FFF;
   min-width: 50px;
-  min-height: 40px;
+  min-height: 25px;
   max-width: 300px;
-  max-height: 40px;
+  max-height: 25px;
   width: auto;
   display: block;
   border-radius: 5px;
   position: absolute;
   box-shadow: 0px 5px 5px 0px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 100ms, min-width 500ms, min-height 500ms, max-width 500ms, max-height 500ms;
+  transition: box-shadow 100ms, min-width 500ms, min-height 500ms, max-width 500ms, max-height 500ms, border 100ms;
   overflow: hidden;
   z-index: 0;
-  padding: 5px;
-  box-sizing: border-box;
+  padding: 10px;
   cursor: pointer;
 }
 
@@ -55,12 +91,53 @@ body {
   margin-right: auto;
 }
 
-.note .title .shrink {
+.note .title .controls {
+  margin-left: auto;
+  display: flex;
+  flex-direction: row;
+  white-space: nowrap;
+  max-width: 0;
+  max-height: 0;
+  transition: max-width 100ms, max-height 100ms;
+}
+
+.note.expanded .title .controls {
+  max-width: none;
+  max-height: none;
+}
+
+.note .button {
   visibility: hidden;
   opacity: 0;
   transition: opacity 500ms;
   cursor: pointer;
-  margin-left: auto;
+  display: block;
+  color: #CCC;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: color 100ms;
+}
+
+.note .internal textarea {
+  overflow-y: auto;
+  overflow-x: hidden;
+  resize: none;
+  pointer-events: all;
+  font-size: 16px;
+  font-family: 'Sarabun', sans-serif;
+  width: 100%;
+  height: 100%;
+}
+
+.note .button:hover {
+  color: #555;
+}
+
+.note .button span {
+  font-size: 24px;
 }
 
 .note:hover {
@@ -75,18 +152,23 @@ body {
   cursor: default;
 }
 
-.note.expanded .shrink {
+.note.expanded .button {
   visibility: visible;
   opacity: 1;
 }
 
-.note .content {
+.note .internal {
   visibility: hidden;
   opacity: 0;
   transition: opacity 500ms;
+  max-width: 0;
+  max-height: 0;
+  height: 100vh;
 }
 
-.note.expanded .content {
+.note.expanded .internal {
   visibility: visible;
   opacity: 1;
+  max-width: none;
+  max-height: 300px;
 }
