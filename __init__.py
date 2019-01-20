@@ -268,15 +268,15 @@ def get_note(id, note):
 
 
 # Create note in workspace
-@app.route("/api/workspace/<int:id>/create/<name>")
-def create_note(id, name):
+@app.route("/api/workspace/<int:id>/create/")
+def create_note(id):
     try:
         owner = authenticate()
 
         conn = engine.connect()
         query = sql.insert(Note.__table__,
                 values={
-                    Note.name: name,
+                    Note.name: "",
                     Note.workspace: id
                     }
                 )
@@ -287,7 +287,7 @@ def create_note(id, name):
                 "status": "ok",
                 "note": {
                     "id": result.lastrowid,
-                    "name": name
+                    "name": ""
                 }
             })
     except MissingInformation as e:

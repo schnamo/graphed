@@ -3,12 +3,12 @@
   <div id="workspace">
     <canvas id="graph">
     </canvas>
-    <div id="overlay"></div>
+    <div id="overlay">
+      <div id="enter_connection_mode" class="button"><span class="mdi mdi-vector-line"></span></div>
+      <div id="logout" class="button" onclick="window.location = '/logout';"><span class="mdi mdi-logout"></span></div> 
+    </div>
   </div>
   <div id="sidenav">
-    <ul>
-    </ul>
-    <div id="enter_connection_mode" class="button"><span class="mdi mdi-vector-line"></span></a>
-    <a href="/logout">Logout</a> 
+    <div id="workspaces"></div>
   </div>
 {% endblock %}
