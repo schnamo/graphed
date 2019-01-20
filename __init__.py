@@ -36,7 +36,10 @@ def authenticate():
         .limit(1)\
         .where(Token.token == token_bin)
     row = conn.execute(query).fetchone()
-    return row.user
+    if row is not None:
+        return row.user
+    else:
+        raise MissingInformation("valid credentials")
 
 # Return a list of all users workspaces
 @app.route("/api/workspaces")
