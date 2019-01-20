@@ -12,8 +12,6 @@ var grabbed = false;
 var connecting = false;
 var firstConnected = undefined;
 
-function createDiv() { return div; }
-
 function Node(id, name) {
   this.id = id;
   this.x = canvas.width / 2;
@@ -22,12 +20,16 @@ function Node(id, name) {
   this.Fy = 0;
   this.neighbours = [];
   this.previousContent = "";
+  this.previousName = name;
 
   this.div = document.createElement('div');
   var title = document.createElement('div');
   title.classList.add('title');
-  var heading = document.createElement('h3');
-  heading.appendChild(document.createTextNode(name));
+  var heading = document.createElement('input');
+  heading.setAttribute('type', 'text');
+  heading.classList.add('name');
+  heading.setAttribute('placeholder', 'Empty note');
+  heading.value = name;
   title.appendChild(heading);
   var controls = document.createElement('div');
   controls.classList.add('controls');
@@ -43,7 +45,7 @@ function Node(id, name) {
   plus.classList.add('button');
   plus.innerHTML = '<span class="mdi mdi-plus"></span>';
   plus.addEventListener('click', e => {
-    api.createNote(active, "New Note", note => {
+    api.createNote(active, "", note => {
       api.connectNotes(active, this.id, note.id, connection => {
         if (!connecting) {
           // TODO save ID
@@ -77,18 +79,20 @@ function Node(id, name) {
   controls.appendChild(shrink);
   title.appendChild(controls);
   var body = document.createElement('textarea');
-  body.setAttribute('placeholder', 'Empty note');
+  body.setAttribute('placeholder', 'Add some text');
   api.getNote(active, id, content => {
-    if (!connecting) {
-      body.value = content;
-      this.previousContent = content;
-      setInterval(() => {
-        if (body.value != this.previousContent) {
-          this.previousContent = body.value;
-          api.updateNote(active, id, body.value, () => {});
-        }
-      }, 1000);
-    }
+    body.value = content;
+    this.previousContent = content;
+    setInterval(() => {
+      if (body.value != this.previousContent) {
+        this.previousContent = body.value;
+        api.updateNote(active, id, body.value, () => {});
+      }
+      if (heading.value != this.previousName) {
+        this.previousName = heading.value
+        api.renameNote(active, id, heading.value, () => {});
+      }
+    }, 1000);
   });
   content.appendChild(body);
   this.div.appendChild(title);
@@ -110,6 +114,9 @@ function Node(id, name) {
 
   this.shrink = function() {
     if (this.expanded) {
+      this.div.querySelector('.name').setSelectionRange(0, 0);
+      this.div.querySelector('.name').blur();
+      this.div.querySelector('textarea').blur();
       this.div.classList.remove('expanded');
       this.expanded = false;
     }
@@ -204,8 +211,8 @@ function update() {
             fspringy += 0.00075 * Math.log(temp) * (other.y - node.y);
           }
         }
-        frepx += 200 / nDistance(other, node) * (node.x - other.x);
-        frepy += 200 / nDistance(other, node) * (node.y - other.y);
+        frepx += 400 / nDistance(other, node) * (node.x - other.x);
+        frepy += 400 / nDistance(other, node) * (node.y - other.y);
       }
     }
 
@@ -234,6 +241,32 @@ function addNode(node) { nodes.push(node); }
 function getMousePos(target, e) {
   var rect = target.getBoundingClientRect();
   return {x : e.clientX - rect.left, y : e.clientY - rect.top};
+}
+
+function enterWorkspace(workspace) {
+  active = workspace;
+  api.getWorkspace(active, function(notes, connections) {
+    nodes = [];
+    for (var note of notes) {
+      var node = new Node(note.id, note.name);
+      node.setPosition(node.x + Math.random() * 50 - 25,
+                       node.y + Math.random() * 50 - 25);
+      addNode(node);
+    }
+    for (var connection of connections) {
+      for (var node of nodes) {
+        if (node.id === connection.origin) {
+          for (var other of nodes) {
+            if (node !== other && other.id === connection.target) {
+              node.addNeighbour(other);
+              break;
+            }
+          }
+          break;
+        }
+      }
+    }
+  });
 }
 
 $(document).ready(function() {
@@ -308,27 +341,11 @@ $(document).ready(function() {
   });
 
   api.getWorkspaces(function(workspaces) {
-    active = workspaces[0].id;
-    api.getWorkspace(active, function(notes, connections) {
-      for (var note of notes) {
-        var node = new Node(note.id, note.name);
-        node.setPosition(node.x + Math.random() * 50 - 25,
-                         node.y + Math.random() * 50 - 25);
-        addNode(node);
-      }
-      for (var connection of connections) {
-        for (var node of nodes) {
-          if (node.id === connection.origin) {
-            for (var other of nodes) {
-              if (node !== other && other.id === connection.target) {
-                node.addNeighbour(other);
-                break;
-              }
-            }
-            break;
-          }
-        }
-      }
-    });
+    for (var workspace of workspaces) {
+      var li = document.createElement('li');
+      li.appendChild(document.createTextNode(workspace.name));
+      document.getElementById('workspaces').appendChild(li);
+    }
+    enterWorkspace(workspaces[0].id);
   });
 });

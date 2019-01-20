@@ -1,4 +1,4 @@
-from flask import request, Flask, render_template, Markup, redirect, jsonify, redirect
+from flask import request, make_response, Flask, render_template, Markup, redirect, jsonify, redirect
 from .database import engine, User, Token, Workspace, Note, Connection
 from .error import MissingInformation, InvalidInformation
 import sqlalchemy as db
@@ -49,7 +49,7 @@ def get_workspaces():
 
         conn = engine.connect()
 
-        # define query for db request to get workspaces
+        # define query for db  request to get workspaces
         workspace_query = sql.select([Workspace.__table__])\
             .where(Workspace.owner == owner)
 
@@ -268,15 +268,15 @@ def get_note(id, note):
 
 
 # Create note in workspace
-@app.route("/api/workspace/<int:id>/create/<name>")
-def create_note(id, name):
+@app.route("/api/workspace/<int:id>/create/")
+def create_note(id):
     try:
         owner = authenticate()
 
         conn = engine.connect()
         query = sql.insert(Note.__table__,
                 values={
-                    Note.name: name,
+                    Note.name: "",
                     Note.workspace: id
                     }
                 )
@@ -287,7 +287,7 @@ def create_note(id, name):
                 "status": "ok",
                 "note": {
                     "id": result.lastrowid,
-                    "name": name
+                    "name": ""
                 }
             })
     except MissingInformation as e:
@@ -414,6 +414,12 @@ def register():
         return redirect("/")
     except MissingInformation as e:
         return render_template('register.html')
+
+@app.route("/logout")
+def logout():
+    resp = redirect('/')
+    resp.set_cookie('token', '', expires=0)
+    return resp
 
 @app.route("/")
 def index():
